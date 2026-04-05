@@ -8,9 +8,5 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
-  nitro: {
-    preset: "netlify"
-  },
-
   compatibilityDate: "2025-01-15"
 })
