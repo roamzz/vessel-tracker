@@ -1,4 +1,14 @@
 <script setup>
+// VesselPopup.vue
+// Popup card shown when a vessel is selected.
+// Positioned absolutely over the vessel marker via the #popup slot in MapView.
+// Translate CSS centers it above the marker point.
+//
+// Props:
+//   vessel — the selected vessel object (or null to hide)
+//
+// Emits:
+//   close — when the X button is clicked (clears selectedId in parent)
 defineProps({
   vessel: {
     type: Object,
@@ -10,10 +20,7 @@ defineEmits(["close"])
 </script>
 
 <template>
-  <div
-    v-if="vessel"
-    class="absolute -translate-x-1/2 -translate-y-full -mt-4 w-52 pointer-events-auto"
-  >
+  <div v-if="vessel" class="absolute -translate-x-1/2 -translate-y-full -mt-4 w-52 pointer-events-auto">
     <UCard>
       <template #header>
         <div class="flex items-center justify-between">

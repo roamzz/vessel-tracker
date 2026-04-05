@@ -1,3 +1,15 @@
+// useVessels.js
+// Data layer composable — generates mock vessel data and handles polling.
+// When a real AIS API is available, replace generateVessels() with an API fetch
+// and call it inside syncNow() instead of tick().
+//
+// Exposes:
+//   vessels      — reactive array of vessel objects
+//   countdown    — seconds until next poll
+//   pollInterval — total poll interval in seconds
+//   isSyncing    — true briefly during each sync (used for loading spinner)
+//   syncNow()    — manually trigger an immediate sync
+
 const TYPES = ["cargo", "cargo", "cargo", "tanker", "tanker", "passenger"]
 const NAMES = [
   "MSC AURORA", "OLYMPIC SPIRIT", "BLUE STAR MYKONOS", "MEDITERRANEAN SKY",
@@ -7,6 +19,8 @@ const NAMES = [
   "PIRAEUS PRIDE", "MARATHON SPIRIT", "THEMIS CARRIER", "ELECTRA SEA"
 ]
 
+// Generates an array of mock vessels with random positions in the Aegean Sea area.
+// Each vessel has a dlat/dlon drift vector used to simulate movement on each tick.
 function generateVessels(count = 20) {
   return Array.from({ length: count }, (_, i) => {
     const type = TYPES[i % TYPES.length]
@@ -31,6 +45,9 @@ export function useVessels(count = 20) {
   const countdown = ref(pollInterval)
   const isSyncing = ref(false)
 
+  // Simulates a position update — moves each vessel slightly along its drift vector
+  // and adds small random variation to heading and speed.
+  // Replace this logic with a real API call when integrating a live AIS feed.
   function tick() {
     vessels.value = vessels.value.map(v => ({
       ...v,
@@ -51,6 +68,7 @@ export function useVessels(count = 20) {
   }
 
   onMounted(() => {
+    // Generate vessels only on the client to avoid SSR hydration mismatches
     vessels.value = generateVessels(count)
 
     const timer = setInterval(() => {
