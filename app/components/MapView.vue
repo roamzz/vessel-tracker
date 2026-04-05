@@ -8,11 +8,13 @@ import "ol/ol.css"
 import { useVesselLayer } from "~/composables/useVesselLayer"
 import { mockVessels } from "~/data/mockVessels"
 
+const emit = defineEmits(["vessel-click"])
+
 const mapContainer = ref(null)
 const { layer: vesselLayer, updateVessels } = useVesselLayer()
 
 onMounted(() => {
-  new Map({
+  const map = new Map({
     target: mapContainer.value,
     layers: [
       new TileLayer({ source: new OSM() }),
@@ -25,6 +27,24 @@ onMounted(() => {
   })
 
   updateVessels(mockVessels)
+
+  map.on("click", (event) => {
+    const feature = map.forEachFeatureAtPixel(event.pixel, f => f)
+    if (feature) {
+      emit("vessel-click", {
+        id: feature.get("id"),
+        name: feature.get("name"),
+        speed: feature.get("speed"),
+        heading: Math.round((feature.get("heading") * 180) / Math.PI),
+        type: feature.get("type")
+      })
+    }
+  })
+
+  map.on("pointermove", (event) => {
+    const hit = map.hasFeatureAtPixel(event.pixel)
+    map.getTargetElement().style.cursor = hit ? "pointer" : ""
+  })
 })
 </script>
 
