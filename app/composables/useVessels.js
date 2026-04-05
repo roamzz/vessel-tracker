@@ -33,15 +33,15 @@ function generateVessels(count = 20) {
       lon: 22.0 + Math.random() * 7,
       speed: type === "passenger" ? 15 + Math.random() * 10 : type === "tanker" ? 4 + Math.random() * 6 : 8 + Math.random() * 8,
       heading: Math.floor(Math.random() * 360),
-      dlat: (Math.random() - 0.5) * 0.003,
-      dlon: (Math.random() - 0.5) * 0.003
+      dlat: (Math.random() - 0.5) * 0.02,
+      dlon: (Math.random() - 0.5) * 0.02
     }
   })
 }
 
 export function useVessels(count = 20) {
   const vessels = ref([])
-  const pollInterval = 10
+  const pollInterval = 2
   const countdown = ref(pollInterval)
   const isSyncing = ref(false)
 

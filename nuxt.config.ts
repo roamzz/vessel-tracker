@@ -8,8 +8,8 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
-  routeRules: {
-    "/": { prerender: true }
+  nitro: {
+    preset: "netlify"
   },
 
   compatibilityDate: "2025-01-15"
