@@ -29,20 +29,35 @@ export function useVesselLayer() {
   })
 
   function updateVessels(vessels) {
-    source.clear()
-    const features = vessels.map((v) => {
-      const feature = new Feature({
-        geometry: new Point(fromLonLat([v.lon, v.lat])),
-        heading: (v.heading * Math.PI) / 180,
-        speed: v.speed,
-        id: v.id,
-        name: v.name,
-        type: v.type
-      })
-      feature.setId(v.id)
-      return feature
+    const existingIds = new Set(source.getFeatures().map(f => f.getId()))
+    const incomingIds = new Set(vessels.map(v => v.id))
+
+    // remove features no longer in the list
+    source.getFeatures().forEach((f) => {
+      if (!incomingIds.has(f.getId())) source.removeFeature(f)
     })
-    source.addFeatures(features)
+
+    vessels.forEach((v) => {
+      if (existingIds.has(v.id)) {
+        // update existing feature in-place
+        const f = source.getFeatureById(v.id)
+        f.getGeometry().setCoordinates(fromLonLat([v.lon, v.lat]))
+        f.set("heading", (v.heading * Math.PI) / 180)
+        f.set("speed", v.speed)
+      } else {
+        // add new feature
+        const f = new Feature({
+          geometry: new Point(fromLonLat([v.lon, v.lat])),
+          heading: (v.heading * Math.PI) / 180,
+          speed: v.speed,
+          id: v.id,
+          name: v.name,
+          type: v.type
+        })
+        f.setId(v.id)
+        source.addFeature(f)
+      }
+    })
   }
 
   return { layer, source, updateVessels }

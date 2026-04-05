@@ -23,7 +23,7 @@ const emit = defineEmits(["vessel-click", "update:zoom", "update:coords"])
 const mapContainer = ref(null)
 const { layer: vesselLayer, updateVessels } = useVesselLayer()
 
-watch(() => props.vessels, v => updateVessels(v), { deep: true })
+watchEffect(() => updateVessels(props.vessels))
 
 onMounted(() => {
   const map = new Map({
