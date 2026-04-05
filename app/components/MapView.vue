@@ -26,6 +26,13 @@ const { layer: vesselLayer, updateVessels } = useVesselLayer()
 
 let mapInstance = null
 
+function flyTo(lon, lat) {
+  if (!mapInstance) return
+  mapInstance.getView().animate({ center: fromLonLat([lon, lat]), duration: 600 })
+}
+
+defineExpose({ flyTo })
+
 watchEffect(() => {
   updateVessels(props.vessels, props.selectedId)
   if (mapInstance && props.selectedId) {

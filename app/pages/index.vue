@@ -7,6 +7,7 @@ const selectedId = ref(null)
 const zoom = ref(7)
 const coords = ref("Move cursor over map")
 
+const mapRef = ref(null)
 const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
 
 function onVesselClick(vessel) {
@@ -15,6 +16,10 @@ function onVesselClick(vessel) {
 
 function onSidebarSelect(id) {
   selectedId.value = selectedId.value === id ? null : id
+  if (selectedId.value) {
+    const vessel = vessels.value.find(v => v.id === selectedId.value)
+    if (vessel) mapRef.value?.flyTo(vessel.lon, vessel.lat)
+  }
 }
 </script>
 
@@ -36,6 +41,7 @@ function onSidebarSelect(id) {
 
       <div class="relative flex-1">
         <MapView
+          ref="mapRef"
           :vessels="vessels"
           :selected-id="selectedId"
           @vessel-click="onVesselClick"
