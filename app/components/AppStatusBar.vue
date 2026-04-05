@@ -19,6 +19,25 @@ const props = defineProps({
 })
 
 const progress = computed(() => (props.countdown / props.pollInterval) * 100)
+
+const fps = ref(0)
+let lastTime = performance.now()
+let frames = 0
+let rafId
+
+function measureFps() {
+  frames++
+  const now = performance.now()
+  if (now - lastTime >= 1000) {
+    fps.value = frames
+    frames = 0
+    lastTime = now
+  }
+  rafId = requestAnimationFrame(measureFps)
+}
+
+onMounted(() => { rafId = requestAnimationFrame(measureFps) })
+onUnmounted(() => cancelAnimationFrame(rafId))
 </script>
 
 <template>
@@ -35,6 +54,10 @@ const progress = computed(() => (props.countdown / props.pollInterval) * 100)
       <span>{{ coords }}</span>
       <USeparator orientation="vertical" class="h-3" />
       <span>WebGL · OSM</span>
+      <USeparator orientation="vertical" class="h-3" />
+      <span :class="fps < 30 ? 'text-error' : fps < 50 ? 'text-warning' : 'text-success'">
+        {{ fps }} FPS
+      </span>
     </div>
   </div>
 </template>

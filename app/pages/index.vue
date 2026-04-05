@@ -1,14 +1,14 @@
 <script setup>
 import { useVessels } from "~/composables/useVessels"
 
-const { vessels, countdown, pollInterval, isSyncing, syncNow } = useVessels(20)
+const { vessels, countdown, pollInterval, isSyncing, syncNow } = useVessels(200)
 
 const selectedId = ref(null)
 const zoom = ref(7)
 const coords = ref("Move cursor over map")
 
 const mapRef = ref(null)
-const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
+const selectedVessel = computed(() => vessels.value.find((v) => v.id === selectedId.value) || null)
 
 function onVesselClick(vessel) {
   selectedId.value = vessel ? vessel.id : null
@@ -17,7 +17,7 @@ function onVesselClick(vessel) {
 function onSidebarSelect(id) {
   selectedId.value = selectedId.value === id ? null : id
   if (selectedId.value) {
-    const vessel = vessels.value.find(v => v.id === selectedId.value)
+    const vessel = vessels.value.find((v) => v.id === selectedId.value)
     if (vessel) mapRef.value?.flyTo(vessel.lon, vessel.lat)
   }
 }
@@ -33,11 +33,7 @@ function onSidebarSelect(id) {
     />
 
     <div class="flex flex-1 overflow-hidden">
-      <VesselSidebar
-        :vessels="vessels"
-        :selected-id="selectedId"
-        @select="onSidebarSelect"
-      />
+      <VesselSidebar :vessels="vessels" :selected-id="selectedId" @select="onSidebarSelect" />
 
       <div class="relative flex-1">
         <MapView
@@ -45,8 +41,8 @@ function onSidebarSelect(id) {
           :vessels="vessels"
           :selected-id="selectedId"
           @vessel-click="onVesselClick"
-          @update:zoom="z => zoom = z"
-          @update:coords="c => coords = c"
+          @update:zoom="(z) => (zoom = z)"
+          @update:coords="(c) => (coords = c)"
         >
           <template #popup>
             <VesselPopup :vessel="selectedVessel" @close="selectedId = null" />
@@ -55,6 +51,11 @@ function onSidebarSelect(id) {
       </div>
     </div>
 
-    <AppStatusBar :zoom="zoom" :coords="coords" :countdown="countdown" :poll-interval="pollInterval" />
+    <AppStatusBar
+      :zoom="zoom"
+      :coords="coords"
+      :countdown="countdown"
+      :poll-interval="pollInterval"
+    />
   </div>
 </template>
