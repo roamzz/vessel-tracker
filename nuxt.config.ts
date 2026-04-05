@@ -8,5 +8,11 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
+  nitro: {
+    output: {
+      publicDir: "dist"
+    }
+  },
+
   compatibilityDate: "2025-01-15"
 })
