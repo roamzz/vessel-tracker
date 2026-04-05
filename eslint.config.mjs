@@ -7,6 +7,7 @@ export default withNuxt({
     "@stylistic/semi": "off",
     "@stylistic/quotes": ["error", "double"],
     "vue/max-attributes-per-line": "off",
-    "vue/html-self-closing": "off"
+    "vue/html-self-closing": "off",
+    "vue/singleline-html-element-content-newline": "off"
   }
 })

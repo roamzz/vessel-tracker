@@ -1,7 +1,7 @@
 <script setup>
 import { useVessels } from "~/composables/useVessels"
 
-const { vessels, countdown, isSyncing, syncNow } = useVessels(20)
+const { vessels, countdown, pollInterval, isSyncing, syncNow } = useVessels(20)
 
 const selectedId = ref(null)
 const zoom = ref(7)
@@ -49,6 +49,6 @@ function onSidebarSelect(id) {
       </div>
     </div>
 
-    <AppStatusBar :zoom="zoom" :coords="coords" />
+    <AppStatusBar :zoom="zoom" :coords="coords" :countdown="countdown" :poll-interval="pollInterval" />
   </div>
 </template>
