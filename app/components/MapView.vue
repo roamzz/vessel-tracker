@@ -21,12 +21,25 @@ const props = defineProps({
 const emit = defineEmits(["vessel-click", "update:zoom", "update:coords"])
 
 const mapContainer = ref(null)
+const popupPixel = ref(null)
 const { layer: vesselLayer, updateVessels } = useVesselLayer()
 
-watchEffect(() => updateVessels(props.vessels))
+let mapInstance = null
+
+watchEffect(() => {
+  updateVessels(props.vessels, props.selectedId)
+  if (mapInstance && props.selectedId) {
+    const vessel = props.vessels.find(v => v.id === props.selectedId)
+    if (vessel) {
+      popupPixel.value = mapInstance.getPixelFromCoordinate(fromLonLat([vessel.lon, vessel.lat]))
+    }
+  } else {
+    popupPixel.value = null
+  }
+})
 
 onMounted(() => {
-  const map = new Map({
+  mapInstance = new Map({
     target: mapContainer.value,
     layers: [
       new TileLayer({ source: new OSM() }),
@@ -38,10 +51,17 @@ onMounted(() => {
     })
   })
 
-  updateVessels(props.vessels)
+  mapInstance.on("postrender", () => {
+    if (props.selectedId) {
+      const vessel = props.vessels.find(v => v.id === props.selectedId)
+      if (vessel) {
+        popupPixel.value = mapInstance.getPixelFromCoordinate(fromLonLat([vessel.lon, vessel.lat]))
+      }
+    }
+  })
 
-  map.on("click", (event) => {
-    const feature = map.forEachFeatureAtPixel(event.pixel, f => f)
+  mapInstance.on("click", (event) => {
+    const feature = mapInstance.forEachFeatureAtPixel(event.pixel, f => f)
     if (feature) {
       emit("vessel-click", {
         id: feature.get("id"),
@@ -55,20 +75,30 @@ onMounted(() => {
     }
   })
 
-  map.on("pointermove", (event) => {
-    const hit = map.hasFeatureAtPixel(event.pixel)
-    map.getTargetElement().style.cursor = hit ? "pointer" : ""
+  mapInstance.on("pointermove", (event) => {
+    const hit = mapInstance.hasFeatureAtPixel(event.pixel)
+    mapInstance.getTargetElement().style.cursor = hit ? "pointer" : ""
     const [lon, lat] = toLonLat(event.coordinate)
     const coords = `${Math.abs(lat).toFixed(4)}°${lat >= 0 ? "N" : "S"}  ${Math.abs(lon).toFixed(4)}°${lon >= 0 ? "E" : "W"}`
     emit("update:coords", coords)
   })
 
-  map.getView().on("change:resolution", () => {
-    emit("update:zoom", map.getView().getZoom())
+  mapInstance.getView().on("change:resolution", () => {
+    emit("update:zoom", mapInstance.getView().getZoom())
   })
 })
 </script>
 
 <template>
-  <div ref="mapContainer" class="w-full h-full" />
+  <div class="relative w-full h-full">
+    <div ref="mapContainer" class="w-full h-full" />
+
+    <div
+      v-if="popupPixel"
+      class="absolute z-20 pointer-events-none"
+      :style="{ left: `${popupPixel[0]}px`, top: `${popupPixel[1]}px` }"
+    >
+      <slot name="popup" />
+    </div>
+  </div>
 </template>

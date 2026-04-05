@@ -7,6 +7,8 @@ const selectedId = ref(null)
 const zoom = ref(7)
 const coords = ref("Move cursor over map")
 
+const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
+
 function onVesselClick(vessel) {
   selectedId.value = vessel ? vessel.id : null
 }
@@ -39,8 +41,11 @@ function onSidebarSelect(id) {
           @vessel-click="onVesselClick"
           @update:zoom="z => zoom = z"
           @update:coords="c => coords = c"
-        />
-        <VesselPopup :vessel="vessels.find(v => v.id === selectedId) || null" @close="selectedId = null" />
+        >
+          <template #popup>
+            <VesselPopup :vessel="selectedVessel" @close="selectedId = null" />
+          </template>
+        </MapView>
       </div>
     </div>
 

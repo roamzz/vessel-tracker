@@ -4,9 +4,13 @@ import Point from "ol/geom/Point"
 import { fromLonLat } from "ol/proj"
 import WebGLVectorLayer from "ol/layer/WebGLVector"
 
-const VESSEL_STYLE = {
+const BASE_STYLE = {
   "shape-points": 3,
-  "shape-radius": 8,
+  "shape-radius": [
+    "case",
+    ["==", ["get", "selected"], 1], 14,
+    8
+  ],
   "shape-rotation": ["get", "heading"],
   "shape-rotate-with-view": true,
   "shape-fill-color": [
@@ -16,8 +20,16 @@ const VESSEL_STYLE = {
     ["<", ["get", "speed"], 25], "rgb(245, 158, 11)",
     "rgb(239, 68, 68)"
   ],
-  "shape-stroke-color": "white",
-  "shape-stroke-width": 1
+  "shape-stroke-color": [
+    "case",
+    ["==", ["get", "selected"], 1], "white",
+    "rgba(255,255,255,0.4)"
+  ],
+  "shape-stroke-width": [
+    "case",
+    ["==", ["get", "selected"], 1], 2,
+    1
+  ]
 }
 
 export function useVesselLayer() {
@@ -25,31 +37,31 @@ export function useVesselLayer() {
 
   const layer = new WebGLVectorLayer({
     source,
-    style: VESSEL_STYLE
+    style: BASE_STYLE
   })
 
-  function updateVessels(vessels) {
+  function updateVessels(vessels, selectedId = null) {
     const existingIds = new Set(source.getFeatures().map(f => f.getId()))
     const incomingIds = new Set(vessels.map(v => v.id))
 
-    // remove features no longer in the list
     source.getFeatures().forEach((f) => {
       if (!incomingIds.has(f.getId())) source.removeFeature(f)
     })
 
     vessels.forEach((v) => {
+      const isSelected = v.id === selectedId ? 1 : 0
       if (existingIds.has(v.id)) {
-        // update existing feature in-place
         const f = source.getFeatureById(v.id)
         f.getGeometry().setCoordinates(fromLonLat([v.lon, v.lat]))
         f.set("heading", (v.heading * Math.PI) / 180)
         f.set("speed", v.speed)
+        f.set("selected", isSelected)
       } else {
-        // add new feature
         const f = new Feature({
           geometry: new Point(fromLonLat([v.lon, v.lat])),
           heading: (v.heading * Math.PI) / 180,
           speed: v.speed,
+          selected: isSelected,
           id: v.id,
           name: v.name,
           type: v.type
