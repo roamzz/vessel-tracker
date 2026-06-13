@@ -125,6 +125,8 @@ and allows showing multiple weather stations on the map as overlays.
 
 **Current workaround:** Single `/nearest` call with map center + 600ms debounce.
 
+**Known issue:** When querying coordinates outside the data coverage area (e.g. `lat=38.69&lon=22.55` for Athens, Greece), the `/nearest` endpoint either returns data from a distant station with no geographic relevance, or silently returns stale/empty data. The frontend has no way to know how far the "nearest" station actually is. Please include a `distance_km` field in the response so the frontend can warn the user when the nearest station is too far to be meaningful (e.g. > 200 km).
+
 ---
 
 ## 5. CORS
