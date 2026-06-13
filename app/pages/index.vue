@@ -75,7 +75,7 @@ onUnmounted(() => {
       <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
         <button
           v-if="leftOpen"
-          class="absolute left-72 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-r-lg border border-l-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+          class="absolute left-72 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-r-lg border border-l-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer"
           @click="leftOpen = false"
         >
           <UIcon name="i-lucide-chevron-left" class="w-3 h-3" />
@@ -84,7 +84,7 @@ onUnmounted(() => {
       <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
         <button
           v-if="rightOpen"
-          class="absolute right-80 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-l-lg border border-r-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+          class="absolute right-80 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-l-lg border border-r-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer"
           @click="rightOpen = false"
         >
           <UIcon name="i-lucide-chevron-right" class="w-3 h-3" />
@@ -109,7 +109,7 @@ onUnmounted(() => {
         >
           <button
             v-if="!leftOpen"
-            class="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-default bg-elevated/80 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
+            class="absolute left-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-default bg-elevated/80 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 cursor-pointer"
             @click="leftOpen = true"
           >
             <UIcon name="i-lucide-panel-left" class="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ onUnmounted(() => {
         >
           <button
             v-if="!rightOpen"
-            class="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-default bg-elevated/80 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
+            class="absolute right-3 top-3 z-30 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-default bg-elevated/80 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 cursor-pointer"
             @click="rightOpen = true"
           >
             Weather & News
