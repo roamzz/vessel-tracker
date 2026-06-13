@@ -10,21 +10,14 @@
 // Emits:
 //   sync — when the SYNC button is clicked (triggers immediate poll in useVessels)
 defineProps({
-  vesselCount: {
-    type: Number,
-    default: 0
-  },
-  countdown: {
-    type: Number,
-    default: 10
-  },
-  isSyncing: {
-    type: Boolean,
-    default: false
-  }
+  vesselCount: { type: Number, default: 0 },
+  countdown:   { type: Number, default: 10 },
+  isSyncing:   { type: Boolean, default: false }
 })
 
 defineEmits(["sync"])
+
+const colorMode = useColorMode()
 </script>
 
 <template>
@@ -45,6 +38,14 @@ defineEmits(["sync"])
     </div>
 
     <div class="ml-auto flex items-center gap-4">
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="ghost"
+        :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
+        @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
+      />
+
       <div class="text-xs text-muted flex flex-col items-end">
         <span>VESSELS</span>
         <span class="font-bold text-primary text-sm leading-none">{{ vesselCount }}</span>

@@ -20,7 +20,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(["select"])
+const emit = defineEmits(["select", "toggle"])
 
 const search = ref("")
 const filterType = ref("all")
@@ -51,11 +51,12 @@ const TYPE_COLOR = {
 </script>
 
 <template>
-  <aside class="w-72 border-r border-default flex flex-col shrink-0 z-20">
+  <aside class="w-72 h-full border-r border-default flex flex-col">
     <div class="p-3 border-b border-default space-y-2">
-      <p class="text-xs text-muted uppercase tracking-wider">
-        Vessels · {{ filtered.length }}
-      </p>
+      <div class="flex items-center justify-between">
+        <p class="text-xs text-muted uppercase tracking-wider">Vessels · {{ filtered.length }}</p>
+        <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-panel-left-close" @click="emit('toggle')" />
+      </div>
 
       <UInput v-model="search" placeholder="Search name or MMSI…" icon="i-lucide-search" size="sm" />
 
