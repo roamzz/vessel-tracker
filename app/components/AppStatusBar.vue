@@ -61,14 +61,14 @@ onUnmounted(() => cancelAnimationFrame(rafId))
       <div class="h-full bg-primary transition-all duration-1000 ease-linear" :style="{ width: `${progress}%` }" />
     </div>
 
-    <div class="flex items-center gap-3 px-4 h-7 text-xs text-muted font-mono">
-      <span>Zoom: {{ zoom.toFixed(1) }}</span>
-      <USeparator orientation="vertical" class="h-3" />
-      <span>{{ coords }}</span>
-      <USeparator orientation="vertical" class="h-3" />
-      <span>WebGL · OSM</span>
-      <USeparator orientation="vertical" class="h-3" />
-      <span :class="fps < 30 ? 'text-error' : fps < 50 ? 'text-warning' : 'text-success'">
+    <div class="flex items-center gap-3 px-4 h-7 text-xs text-muted font-mono overflow-hidden">
+      <span class="shrink-0">Zoom: {{ zoom.toFixed(1) }}</span>
+      <USeparator orientation="vertical" class="h-3 hidden sm:block shrink-0" />
+      <span class="hidden sm:block truncate min-w-0">{{ coords }}</span>
+      <USeparator orientation="vertical" class="h-3 hidden md:block shrink-0" />
+      <span class="hidden md:block shrink-0">WebGL · OSM</span>
+      <USeparator orientation="vertical" class="h-3 shrink-0" />
+      <span class="shrink-0" :class="fps < 30 ? 'text-error' : fps < 50 ? 'text-warning' : 'text-success'">
         {{ fps }} FPS
       </span>
     </div>

@@ -50,7 +50,7 @@ const weather = {
           { label: 'Pressure', value: weather.pressure, unit: 'hPa' }
         ]"
         :key="metric.label"
-        class="rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5"
+        class="rounded-lg bg-elevated border border-default p-2.5"
       >
         <p class="text-[9px] text-muted uppercase tracking-widest mb-1.5">{{ metric.label }}</p>
         <div class="flex items-baseline gap-1">
@@ -62,7 +62,7 @@ const weather = {
 
     <div class="flex items-center gap-3 text-[11px]">
       <span class="text-muted shrink-0">Humidity</span>
-      <div class="flex-1 h-px bg-white/10 rounded-full overflow-hidden">
+      <div class="flex-1 h-px bg-muted/40 rounded-full overflow-hidden">
         <div class="h-full bg-primary rounded-full" :style="{ width: weather.humidity + '%' }" />
       </div>
       <span class="font-mono text-muted shrink-0">{{ weather.humidity }}%</span>

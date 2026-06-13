@@ -27,9 +27,9 @@ const colorMode = useColorMode()
       VesselTrack
     </NuxtLink>
 
-    <USeparator orientation="vertical" class="h-5" />
+    <USeparator orientation="vertical" class="h-5 hidden sm:block" />
 
-    <div class="flex items-center gap-2 text-xs text-muted">
+    <div class="hidden sm:flex items-center gap-2 text-xs text-muted">
       <span class="relative flex size-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
         <span class="relative inline-flex rounded-full size-2 bg-success" />
@@ -37,7 +37,7 @@ const colorMode = useColorMode()
       LIVE · next poll <span class="font-bold text-default">{{ countdown }}s</span>
     </div>
 
-    <div class="ml-auto flex items-center gap-4">
+    <div class="ml-auto flex items-center gap-3">
       <UButton
         size="sm"
         color="neutral"
@@ -46,13 +46,13 @@ const colorMode = useColorMode()
         @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
       />
 
-      <div class="text-xs text-muted flex flex-col items-end">
+      <div class="hidden sm:flex text-xs text-muted flex-col items-end">
         <span>VESSELS</span>
         <span class="font-bold text-primary text-sm leading-none">{{ vesselCount }}</span>
       </div>
 
       <UButton size="sm" color="neutral" variant="outline" :loading="isSyncing" icon="i-lucide-refresh-cw" @click="$emit('sync')">
-        SYNC
+        <span class="hidden sm:inline">SYNC</span>
       </UButton>
     </div>
   </nav>

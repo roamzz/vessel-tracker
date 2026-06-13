@@ -9,10 +9,10 @@ const news = [
 ]
 
 const BADGE = {
-  Alert:    "text-red-400 bg-red-500/10 border-red-500/20",
-  Port:     "text-primary bg-primary/10 border-primary/20",
-  Maritime: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-  Weather:  "text-amber-400 bg-amber-500/10 border-amber-500/20"
+  Alert:    "text-red-600 dark:text-red-400 bg-red-500/15 border-red-500/30",
+  Port:     "text-primary bg-primary/15 border-primary/30",
+  Maritime: "text-violet-600 dark:text-violet-400 bg-violet-500/15 border-violet-500/30",
+  Weather:  "text-amber-600 dark:text-amber-400 bg-amber-500/15 border-amber-500/30"
 }
 </script>
 
@@ -33,8 +33,8 @@ const BADGE = {
       <div
         v-for="item in news"
         :key="item.id"
-        class="p-2.5 rounded-lg hover:bg-white/[0.04] transition-colors cursor-pointer"
-        :class="item.urgent ? 'bg-red-500/5 border border-red-500/15' : ''"
+        class="p-2.5 rounded-lg hover:bg-elevated transition-colors cursor-pointer"
+        :class="item.urgent ? 'bg-red-500/8 dark:bg-red-500/5 border border-red-500/25 dark:border-red-500/15' : ''"
       >
         <div class="flex items-center gap-2 mb-1.5">
           <span
@@ -47,7 +47,7 @@ const BADGE = {
         </div>
         <p
           class="text-[11px] leading-relaxed"
-          :class="item.urgent ? 'text-white font-medium' : 'text-muted'"
+          :class="item.urgent ? 'text-default font-medium' : 'text-muted'"
         >
           {{ item.title }}
         </p>

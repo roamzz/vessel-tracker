@@ -26,7 +26,7 @@ function onSidebarSelect(id) {
 </script>
 
 <template>
-  <div class="flex flex-col h-screen">
+  <div class="flex flex-col h-screen overflow-hidden">
     <AppNav
       :vessel-count="vessels.length"
       :countdown="countdown"
@@ -44,7 +44,7 @@ function onSidebarSelect(id) {
       </div>
 
       <!-- Center: map + floating reopen buttons -->
-      <div class="relative flex-1">
+      <div class="relative flex-1 min-w-0">
         <Transition
           enter-active-class="transition-all duration-200"
           enter-from-class="opacity-0 -translate-x-2"
