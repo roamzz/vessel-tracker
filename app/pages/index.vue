@@ -1,16 +1,26 @@
 <script setup>
-import { useVessels } from "~/composables/useVessels"
-import { usePanels } from "~/composables/usePanels"
+import { useVesselStore } from '~/stores/vessels'
+import { usePanels } from '~/composables/usePanels'
 
-const { vessels, countdown, pollInterval, isSyncing, syncNow } = useVessels(50)
+const store = useVesselStore()
+const { vessels, countdown, pollInterval, isSyncing } = storeToRefs(store)
 const { leftOpen, rightOpen } = usePanels()
 
 const selectedId = ref(null)
 const zoom = ref(7)
-const coords = ref("Move cursor over map")
+const coords = ref('Move cursor over map')
 const mapRef = ref(null)
 
-const selectedVessel = computed(() => vessels.value.find((v) => v.id === selectedId.value) || null)
+const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
+
+// Fit map to vessel bounds once on first successful load
+let fitted = false
+watch(vessels, (list) => {
+  if (!fitted && list.length > 0) {
+    fitted = true
+    nextTick(() => mapRef.value?.fitBounds(list))
+  }
+})
 
 function onVesselClick(vessel) {
   selectedId.value = vessel ? vessel.id : null
@@ -19,10 +29,13 @@ function onVesselClick(vessel) {
 function onSidebarSelect(id) {
   selectedId.value = selectedId.value === id ? null : id
   if (selectedId.value) {
-    const vessel = vessels.value.find((v) => v.id === selectedId.value)
+    const vessel = vessels.value.find(v => v.id === selectedId.value)
     if (vessel) mapRef.value?.flyTo(vessel.lon, vessel.lat)
   }
 }
+
+onMounted(() => store.startPolling())
+onUnmounted(() => store.stopPolling())
 </script>
 
 <template>
@@ -31,7 +44,7 @@ function onSidebarSelect(id) {
       :vessel-count="vessels.length"
       :countdown="countdown"
       :is-syncing="isSyncing"
-      @sync="syncNow"
+      @sync="store.sync()"
     />
 
     <div class="flex flex-1 overflow-hidden">
@@ -45,6 +58,11 @@ function onSidebarSelect(id) {
 
       <!-- Center: map + floating reopen buttons -->
       <div class="relative flex-1 min-w-0">
+        <Transition enter-active-class="transition-opacity duration-300" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-500" leave-to-class="opacity-0">
+          <div v-if="isSyncing" class="absolute top-0 inset-x-0 h-0.5 z-40 overflow-hidden">
+            <div class="h-full w-1/3 bg-primary rounded-full [animation:map-loading_1.4s_ease-in-out_infinite]" />
+          </div>
+        </Transition>
         <Transition
           enter-active-class="transition-all duration-200"
           enter-from-class="opacity-0 -translate-x-2"
@@ -104,11 +122,6 @@ function onSidebarSelect(id) {
       </div>
     </div>
 
-    <AppStatusBar
-      :zoom="zoom"
-      :coords="coords"
-      :countdown="countdown"
-      :poll-interval="pollInterval"
-    />
+    <AppStatusBar :zoom="zoom" :coords="coords" />
   </div>
 </template>

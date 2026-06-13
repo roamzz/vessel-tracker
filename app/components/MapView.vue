@@ -21,6 +21,7 @@ import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
 import OSM from "ol/source/OSM"
 import { fromLonLat, toLonLat } from "ol/proj"
+import { boundingExtent } from "ol/extent"
 import "ol/ol.css"
 import { useVesselLayer } from "~/composables/useVesselLayer"
 
@@ -48,7 +49,14 @@ function flyTo(lon, lat) {
   mapInstance.getView().animate({ center: fromLonLat([lon, lat]), duration: 600 })
 }
 
-defineExpose({ flyTo })
+function fitBounds(vessels) {
+  if (!mapInstance || !vessels.length) return
+  const coords = vessels.map(v => fromLonLat([v.lon, v.lat]))
+  const extent = boundingExtent(coords)
+  mapInstance.getView().fit(extent, { padding: [80, 80, 80, 80], duration: 800, maxZoom: 12 })
+}
+
+defineExpose({ flyTo, fitBounds })
 
 // Sync vessel features and popup position whenever vessels or selectedId changes
 watchEffect(() => {
@@ -71,8 +79,8 @@ onMounted(() => {
       vesselLayer
     ],
     view: new View({
-      center: fromLonLat([23.64, 37.94]),
-      zoom: 7
+      center: fromLonLat([0, 51]),
+      zoom: 5
     })
   })
 

@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@keyframes map-loading {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
