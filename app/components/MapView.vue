@@ -56,7 +56,18 @@ function fitBounds(vessels) {
   mapInstance.getView().fit(extent, { padding: [80, 80, 80, 80], duration: 800, maxZoom: 12 })
 }
 
-defineExpose({ flyTo, fitBounds })
+function fitIfEmpty(vessels) {
+  if (!mapInstance || !vessels.length) return
+  const viewport = mapInstance.getView().calculateExtent(mapInstance.getSize())
+  const anyVisible = vessels.some(v => {
+    const coord = fromLonLat([v.lon, v.lat])
+    return coord[0] >= viewport[0] && coord[0] <= viewport[2] &&
+           coord[1] >= viewport[1] && coord[1] <= viewport[3]
+  })
+  if (!anyVisible) fitBounds(vessels)
+}
+
+defineExpose({ flyTo, fitBounds, fitIfEmpty })
 
 // Sync vessel features and popup position whenever vessels or selectedId changes
 watchEffect(() => {

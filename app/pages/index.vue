@@ -18,13 +18,10 @@ const mapRef = ref(null)
 
 const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
 
-// Fit map to vessel bounds once on first successful load
-let fitted = false
+// Fit map to vessel bounds on first load, and on subsequent polls if no vessels are visible
 watch(vessels, (list) => {
-  if (!fitted && list.length > 0) {
-    fitted = true
-    nextTick(() => mapRef.value?.fitBounds(list))
-  }
+  if (!list.length) return
+  nextTick(() => mapRef.value?.fitIfEmpty(list))
 })
 
 function onVesselClick(vessel) {
@@ -71,8 +68,28 @@ onUnmounted(() => {
         class="overflow-hidden transition-all duration-300 ease-in-out h-full shrink-0 z-20"
         :class="leftOpen ? 'w-72' : 'w-0'"
       >
-        <VesselSidebar :vessels="vessels" :selected-id="selectedId" @select="onSidebarSelect" @toggle="leftOpen = false" />
+        <VesselSidebar :vessels="vessels" :selected-id="selectedId" @select="onSidebarSelect" />
       </div>
+
+      <!-- Hanging close tabs — anchored to sidebar edges, float over the map -->
+      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
+        <button
+          v-if="leftOpen"
+          class="absolute left-72 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-r-lg border border-l-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+          @click="leftOpen = false"
+        >
+          <UIcon name="i-lucide-chevron-left" class="w-3 h-3" />
+        </button>
+      </Transition>
+      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
+        <button
+          v-if="rightOpen"
+          class="absolute right-80 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-l-lg border border-r-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+          @click="rightOpen = false"
+        >
+          <UIcon name="i-lucide-chevron-right" class="w-3 h-3" />
+        </button>
+      </Transition>
 
       <!-- Center: map + floating reopen buttons -->
       <div class="relative flex-1 min-w-0">
@@ -138,7 +155,7 @@ onUnmounted(() => {
         class="overflow-hidden transition-all duration-300 ease-in-out h-full shrink-0 z-20"
         :class="rightOpen ? 'w-80' : 'w-0'"
       >
-        <RightSidebar @toggle="rightOpen = false" />
+        <RightSidebar />
       </div>
     </div>
 

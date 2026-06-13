@@ -1,9 +1,20 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Move OL zoom control to bottom-left */
+.ol-zoom {
+  top: auto !important;
+  bottom: 1em;
+  left: 0.5em;
+}
+
 @keyframes map-loading {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 * {
