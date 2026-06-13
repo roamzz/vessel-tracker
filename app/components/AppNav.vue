@@ -38,13 +38,18 @@ const colorMode = useColorMode()
     </div>
 
     <div class="ml-auto flex items-center gap-3">
-      <UButton
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
-        @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-      />
+      <ClientOnly>
+        <UButton
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          :icon="colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'"
+          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
+        />
+        <template #fallback>
+          <UButton size="sm" color="neutral" variant="ghost" icon="i-lucide-sun" />
+        </template>
+      </ClientOnly>
 
       <div class="hidden sm:flex text-xs text-muted flex-col items-end">
         <span>VESSELS</span>
