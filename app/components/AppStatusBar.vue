@@ -1,16 +1,4 @@
 <script setup>
-// AppStatusBar.vue
-// Bottom status bar — shows current map zoom, cursor coordinates, renderer info, and FPS.
-// Also contains a thin poll progress bar above it that drains over the poll interval.
-//
-// Props:
-//   zoom         — current map zoom level (emitted by MapView)
-//   coords       — cursor coordinates as formatted string (emitted by MapView)
-//   countdown    — seconds remaining until next sync (from useVessels)
-//   pollInterval — total poll interval in seconds (from useVessels)
-//
-// FPS is measured locally using requestAnimationFrame.
-// Color coding: green ≥50fps, orange 30–50fps, red <30fps.
 defineProps({
   zoom: {
     type: Number,
@@ -50,8 +38,6 @@ onUnmounted(() => cancelAnimationFrame(rafId))
       <span class="shrink-0">Zoom: {{ zoom.toFixed(1) }}</span>
       <USeparator orientation="vertical" class="h-3 hidden sm:block shrink-0" />
       <span class="hidden sm:block truncate min-w-0">{{ coords }}</span>
-      <USeparator orientation="vertical" class="h-3 hidden md:block shrink-0" />
-      <span class="hidden md:block shrink-0">WebGL · OSM</span>
       <USeparator orientation="vertical" class="h-3 shrink-0" />
       <span class="shrink-0" :class="fps < 30 ? 'text-error' : fps < 50 ? 'text-warning' : 'text-success'">
         {{ fps }} FPS

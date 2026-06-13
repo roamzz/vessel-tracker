@@ -1,29 +1,42 @@
 <script setup>
-// MapView.vue
-// Core map component — renders an OpenLayers map with OSM base layer and a WebGL vessel layer.
-//
-// Props:
-//   vessels    — array of vessel objects to render as markers
-//   selectedId — id of the currently selected vessel (highlighted marker + popup)
-//
-// Emits:
-//   vessel-click   — when a marker is clicked, emits the vessel data (or null if clicking empty map)
-//   update:zoom    — current zoom level on view change
-//   update:coords  — cursor coordinates as formatted string on pointer move
-//
-// Exposes:
-//   flyTo(lon, lat) — animate the map view to a given coordinate (used by sidebar selection)
-//
-// The popup slot is positioned absolutely over the selected vessel marker
-// and repositioned on every map render via the postrender event.
 import Map from "ol/Map"
 import View from "ol/View"
 import TileLayer from "ol/layer/Tile"
-import OSM from "ol/source/OSM"
+import XYZ from "ol/source/XYZ"
 import { fromLonLat, toLonLat } from "ol/proj"
 import { boundingExtent } from "ol/extent"
 import "ol/ol.css"
 import { useVesselLayer } from "~/composables/useVesselLayer"
+
+const colorMode = useColorMode()
+
+const CARTO = {
+  dark: [
+    "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+    "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+    "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+    "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
+  ],
+  light: [
+    "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
+    "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png"
+  ]
+}
+
+function cartoSource(mode) {
+  return new XYZ({
+    urls: mode === "dark" ? CARTO.dark : CARTO.light,
+    tileSize: 512,
+    maxZoom: 19,
+    crossOrigin: "anonymous",
+    attributions:
+      '© <a href="https://carto.com/" target="_blank">CARTO</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+  })
+}
+
+let tileLayer = null
 
 const props = defineProps({
   vessels: {
@@ -51,7 +64,7 @@ function flyTo(lon, lat) {
 
 function fitBounds(vessels) {
   if (!mapInstance || !vessels.length) return
-  const coords = vessels.map(v => fromLonLat([v.lon, v.lat]))
+  const coords = vessels.map((v) => fromLonLat([v.lon, v.lat]))
   const extent = boundingExtent(coords)
   mapInstance.getView().fit(extent, { padding: [80, 80, 80, 80], duration: 800, maxZoom: 12 })
 }
@@ -59,21 +72,28 @@ function fitBounds(vessels) {
 function fitIfEmpty(vessels) {
   if (!mapInstance || !vessels.length) return
   const viewport = mapInstance.getView().calculateExtent(mapInstance.getSize())
-  const anyVisible = vessels.some(v => {
+  const anyVisible = vessels.some((v) => {
     const coord = fromLonLat([v.lon, v.lat])
-    return coord[0] >= viewport[0] && coord[0] <= viewport[2] &&
-           coord[1] >= viewport[1] && coord[1] <= viewport[3]
+    return (
+      coord[0] >= viewport[0] &&
+      coord[0] <= viewport[2] &&
+      coord[1] >= viewport[1] &&
+      coord[1] <= viewport[3]
+    )
   })
   if (!anyVisible) fitBounds(vessels)
 }
 
 defineExpose({ flyTo, fitBounds, fitIfEmpty })
 
-// Sync vessel features and popup position whenever vessels or selectedId changes
+watch(() => colorMode.value, (mode) => {
+  tileLayer?.setSource(cartoSource(mode))
+})
+
 watchEffect(() => {
   updateVessels(props.vessels, props.selectedId)
   if (mapInstance && props.selectedId) {
-    const vessel = props.vessels.find(v => v.id === props.selectedId)
+    const vessel = props.vessels.find((v) => v.id === props.selectedId)
     if (vessel) {
       popupPixel.value = mapInstance.getPixelFromCoordinate(fromLonLat([vessel.lon, vessel.lat]))
     }
@@ -83,31 +103,28 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  tileLayer = new TileLayer({ source: cartoSource(colorMode.value) })
+
   mapInstance = new Map({
     target: mapContainer.value,
-    layers: [
-      new TileLayer({ source: new OSM() }),
-      vesselLayer
-    ],
+    layers: [tileLayer, vesselLayer],
     view: new View({
       center: fromLonLat([0, 51]),
       zoom: 5
     })
   })
 
-  // Keep popup anchored to the vessel as the map pans/zooms
   mapInstance.on("postrender", () => {
     if (props.selectedId) {
-      const vessel = props.vessels.find(v => v.id === props.selectedId)
+      const vessel = props.vessels.find((v) => v.id === props.selectedId)
       if (vessel) {
         popupPixel.value = mapInstance.getPixelFromCoordinate(fromLonLat([vessel.lon, vessel.lat]))
       }
     }
   })
 
-  // Emit clicked vessel data, or null if clicking on empty map
   mapInstance.on("click", (event) => {
-    const feature = mapInstance.forEachFeatureAtPixel(event.pixel, f => f)
+    const feature = mapInstance.forEachFeatureAtPixel(event.pixel, (f) => f)
     if (feature) {
       emit("vessel-click", {
         id: feature.get("id"),
@@ -121,7 +138,6 @@ onMounted(() => {
     }
   })
 
-  // Show pointer cursor over vessels and emit current coordinates
   mapInstance.on("pointermove", (event) => {
     const hit = mapInstance.hasFeatureAtPixel(event.pixel)
     mapInstance.getTargetElement().style.cursor = hit ? "pointer" : ""

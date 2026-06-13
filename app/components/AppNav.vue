@@ -1,14 +1,4 @@
 <script setup>
-// AppNav.vue
-// Top navigation bar — shows the app logo, live poll status, vessel count, and sync button.
-//
-// Props:
-//   vesselCount — total number of vessels currently loaded
-//   countdown   — seconds until the next automatic sync
-//   isSyncing   — true while a sync is in progress (shows spinner on button)
-//
-// Emits:
-//   sync — when the SYNC button is clicked (triggers immediate poll in useVessels)
 defineProps({
   vesselCount: { type: Number, default: 0 },
   countdown:   { type: Number, default: 10 },

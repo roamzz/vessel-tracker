@@ -1,14 +1,4 @@
 <script setup>
-// VesselPopup.vue
-// Popup card shown when a vessel is selected.
-// Positioned absolutely over the vessel marker via the #popup slot in MapView.
-// Translate CSS centers it above the marker point.
-//
-// Props:
-//   vessel — the selected vessel object (or null to hide)
-//
-// Emits:
-//   close — when the X button is clicked (clears selectedId in parent)
 defineProps({
   vessel: {
     type: Object,

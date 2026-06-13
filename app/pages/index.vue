@@ -8,7 +8,7 @@ const vesselStore = useVesselStore()
 const weatherStore = useWeatherStore()
 const newsStore = useNewsStore()
 
-const { vessels, countdown, pollInterval, isSyncing } = storeToRefs(vesselStore)
+const { vessels, countdown, isSyncing } = storeToRefs(vesselStore)
 const { leftOpen, rightOpen } = usePanels()
 
 const selectedId = ref(null)

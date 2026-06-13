@@ -1,14 +1,4 @@
 <script setup>
-// VesselSidebar.vue
-// Left sidebar — searchable, filterable list of all vessels.
-// Clicking a vessel emits 'select' with the vessel id, which triggers map animation + popup.
-//
-// Props:
-//   vessels    — full vessel array from useVessels
-//   selectedId — currently selected vessel id (highlights the active row)
-//
-// Emits:
-//   select(id) — vessel id when a row is clicked
 const props = defineProps({
   vessels: {
     type: Array,

@@ -1,99 +1,115 @@
-// useVesselLayer.js
-// OpenLayers layer composable — manages the WebGL vector layer that renders vessel markers.
-//
-// Markers are triangles colored by vessel type:
-//   blue   = cargo
-//   orange = tanker
-//   green  = passenger
-//
-// The selected vessel is rendered larger with a white stroke.
-// Rotation is based on heading (converted from degrees to radians).
-//
-// Exposes:
-//   layer           — the OpenLayers WebGLVectorLayer to add to the map
-//   source          — the underlying VectorSource (useful for hit detection)
-//   updateVessels() — call this with the latest vessel array + selectedId to sync the layer
-
+import VectorLayer from "ol/layer/Vector"
 import VectorSource from "ol/source/Vector"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
+import Style from "ol/style/Style"
+import Icon from "ol/style/Icon"
 import { fromLonLat } from "ol/proj"
-import WebGLVectorLayer from "ol/layer/WebGLVector"
+import { VESSEL_COLORS } from "~/utils/vessel"
 
-// WebGL style using OpenLayers expression syntax.
-// typeCode is a numeric encoding of vessel type (see TYPE_CODE below).
-// selected is 1 for the active vessel, 0 for all others.
-const BASE_STYLE = {
-  "shape-points": 3,
-  "shape-radius": [
-    "case",
-    ["==", ["get", "selected"], 1], 14,
-    8
-  ],
-  "shape-rotation": ["get", "heading"],
-  "shape-rotate-with-view": true,
-  "shape-fill-color": [
-    "case",
-    ["==", ["get", "typeCode"], 1], "rgb(59, 130, 246)", // cargo → blue
-    ["==", ["get", "typeCode"], 2], "rgb(245, 158, 11)", // tanker → orange
-    "rgb(34, 197, 94)" // passenger → green
-  ],
-  "shape-stroke-color": [
-    "case",
-    ["==", ["get", "selected"], 1], "white",
-    "rgba(255,255,255,0.4)"
-  ],
-  "shape-stroke-width": [
-    "case",
-    ["==", ["get", "selected"], 1], 2,
-    1
-  ]
+// Canvas cache — 3 types × 2 selection states = 6 variants
+const canvasCache = {}
+
+function drawVessel(type, selected) {
+  const key = `${type}-${selected ? 1 : 0}`
+  if (canvasCache[key]) return canvasCache[key]
+
+  const size = selected ? 30 : 20
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+
+  const cx = size / 2
+  const cy = size / 2
+  const w = size * 0.30  // half-beam
+  const h = size * 0.44  // half-length
+
+  ctx.save()
+  ctx.translate(cx, cy)
+
+  // Vessel silhouette: pointed bow (top), tapered stern (bottom)
+  ctx.beginPath()
+  ctx.moveTo(0, -h)           // bow
+  ctx.lineTo(w, -h * 0.05)    // starboard beam
+  ctx.lineTo(w * 0.45, h)     // starboard stern
+  ctx.lineTo(-w * 0.45, h)    // port stern
+  ctx.lineTo(-w, -h * 0.05)   // port beam
+  ctx.closePath()
+
+  ctx.fillStyle = VESSEL_COLORS[type] || VESSEL_COLORS.cargo
+  ctx.fill()
+
+  if (selected) {
+    ctx.shadowColor = 'rgba(255,255,255,0.9)'
+    ctx.shadowBlur = 7
+  }
+
+  ctx.strokeStyle = selected ? '#ffffff' : 'rgba(255,255,255,0.55)'
+  ctx.lineWidth = selected ? 2 : 1.2
+  ctx.stroke()
+  ctx.restore()
+
+  canvasCache[key] = canvas
+  return canvas
+}
+
+// resolution is meters/px in EPSG:3857 — higher = zoomed out
+function scaleFromResolution(resolution) {
+  if (resolution > 5000) return 0.40
+  if (resolution > 1500) return 0.60
+  if (resolution > 500)  return 0.80
+  return 1.0
+}
+
+function vesselStyle(feature, resolution) {
+  const selected = feature.get('selected') === 1
+  const type = feature.get('type') || 'cargo'
+  const heading = feature.get('heading') || 0
+  const canvas = drawVessel(type, selected)
+
+  return new Style({
+    image: new Icon({
+      img: canvas,
+      imgSize: [canvas.width, canvas.height],
+      rotation: heading,
+      rotateWithView: false,
+      scale: scaleFromResolution(resolution),
+    })
+  })
 }
 
 export function useVesselLayer() {
   const source = new VectorSource()
-
-  const layer = new WebGLVectorLayer({
-    source,
-    style: BASE_STYLE
-  })
-
-  // Maps vessel type string to a numeric code for use in WebGL expressions
+  const layer = new VectorLayer({ source, style: vesselStyle })
   const TYPE_CODE = { cargo: 1, tanker: 2, passenger: 3 }
 
-  // Performs a diff update — updates existing features in-place and adds/removes as needed.
-  // This avoids clearing the entire source on each poll, which is important for WebGL performance.
   function updateVessels(vessels, selectedId = null) {
     const existingIds = new Set(source.getFeatures().map(f => f.getId()))
     const incomingIds = new Set(vessels.map(v => v.id))
 
-    // Remove features that are no longer in the vessel list
-    source.getFeatures().forEach((f) => {
+    source.getFeatures().forEach(f => {
       if (!incomingIds.has(f.getId())) source.removeFeature(f)
     })
 
-    vessels.forEach((v) => {
+    vessels.forEach(v => {
       const isSelected = v.id === selectedId ? 1 : 0
-      const typeCode = TYPE_CODE[v.type] || 1
       if (existingIds.has(v.id)) {
-        // Update position and properties in-place (no re-render of unchanged features)
         const f = source.getFeatureById(v.id)
         f.getGeometry().setCoordinates(fromLonLat([v.lon, v.lat]))
-        f.set("heading", (v.heading * Math.PI) / 180)
-        f.set("speed", v.speed)
-        f.set("selected", isSelected)
-        f.set("typeCode", typeCode)
+        f.set('heading', (v.heading * Math.PI) / 180)
+        f.set('speed', v.speed)
+        f.set('selected', isSelected)
+        f.set('type', v.type)
       } else {
-        // New vessel — create and add feature
         const f = new Feature({
           geometry: new Point(fromLonLat([v.lon, v.lat])),
           heading: (v.heading * Math.PI) / 180,
           speed: v.speed,
           selected: isSelected,
-          typeCode,
+          type: v.type,
           id: v.id,
           name: v.name,
-          type: v.type
         })
         f.setId(v.id)
         source.addFeature(f)
