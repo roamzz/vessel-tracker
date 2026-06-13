@@ -1,14 +1,19 @@
 <script setup>
 import { useVesselStore } from '~/stores/vessels'
+import { useWeatherStore } from '~/stores/weather'
+import { useNewsStore } from '~/stores/news'
 import { usePanels } from '~/composables/usePanels'
 
-const store = useVesselStore()
-const { vessels, countdown, pollInterval, isSyncing } = storeToRefs(store)
+const vesselStore = useVesselStore()
+const weatherStore = useWeatherStore()
+const newsStore = useNewsStore()
+
+const { vessels, countdown, pollInterval, isSyncing } = storeToRefs(vesselStore)
 const { leftOpen, rightOpen } = usePanels()
 
 const selectedId = ref(null)
 const zoom = ref(7)
-const coords = ref('Move cursor over map')
+const coords = ref('')
 const mapRef = ref(null)
 
 const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
@@ -34,8 +39,21 @@ function onSidebarSelect(id) {
   }
 }
 
-onMounted(() => store.startPolling())
-onUnmounted(() => store.stopPolling())
+let centerDebounce = null
+function onCenterChange({ lat, lon }) {
+  clearTimeout(centerDebounce)
+  centerDebounce = setTimeout(() => weatherStore.fetch({ lat, lon }), 600)
+}
+
+onMounted(() => {
+  vesselStore.startPolling()
+  newsStore.start()
+})
+
+onUnmounted(() => {
+  vesselStore.stopPolling()
+  newsStore.stop()
+})
 </script>
 
 <template>
@@ -44,7 +62,7 @@ onUnmounted(() => store.stopPolling())
       :vessel-count="vessels.length"
       :countdown="countdown"
       :is-syncing="isSyncing"
-      @sync="store.sync()"
+      @sync="vesselStore.sync()"
     />
 
     <div class="flex flex-1 overflow-hidden">
@@ -63,6 +81,7 @@ onUnmounted(() => store.stopPolling())
             <div class="h-full w-1/3 bg-primary rounded-full [animation:map-loading_1.4s_ease-in-out_infinite]" />
           </div>
         </Transition>
+
         <Transition
           enter-active-class="transition-all duration-200"
           enter-from-class="opacity-0 -translate-x-2"
@@ -106,6 +125,7 @@ onUnmounted(() => store.stopPolling())
           @vessel-click="onVesselClick"
           @update:zoom="(z) => (zoom = z)"
           @update:coords="(c) => (coords = c)"
+          @update:center="onCenterChange"
         >
           <template #popup>
             <VesselPopup :vessel="selectedVessel" @close="selectedId = null" />

@@ -94,6 +94,39 @@ Alternative: wrap response body `{ "total": 312, "data": [...] }`
 
 ---
 
+## 6. Weather endpoint — bbox support
+
+**Problem:** The current `/weather/nearest?lat=&lon=` endpoint accepts a single
+point and returns the nearest weather station to it. The frontend calls this
+after every map pan (debounced), passing the map center. This works but it is
+a single point of truth for the entire viewport — a large viewport could be
+covering very different sea conditions.
+
+**Request:** Add an optional bbox variant so the frontend can request weather
+observations for the entire visible area and display multiple data points:
+
+```
+GET /weather/observations?min_lat=49.5&max_lat=61.0&min_lon=-8.5&max_lon=2.5
+```
+
+Response should be an array of observation objects (same schema as `/nearest`
+but without the coordinate-matching step):
+
+```json
+[
+  { "lat": 51.5, "lon": -1.2, "temperature_2m": 14.2, "wind_speed_10m": 22.0, ... },
+  { "lat": 53.0, "lon": -3.0, "temperature_2m": 12.8, "wind_speed_10m": 18.5, ... }
+]
+```
+
+**Why this matters:** A bbox call replaces the per-pan request with one call
+that is tied to the map viewport (same as vessel loading), reduces API chatter,
+and allows showing multiple weather stations on the map as overlays.
+
+**Current workaround:** Single `/nearest` call with map center + 600ms debounce.
+
+---
+
 ## 5. CORS
 
 **Request:** Confirm CORS headers are set to allow browser requests from the
@@ -115,3 +148,4 @@ Access-Control-Allow-Origin: http://localhost:3001
 | 3   | Add `sog`, `cog`, `true_heading`, `ship_type` to response | High     |
 | 4   | Total count in response                                   | Medium   |
 | 5   | CORS headers confirmed                                    | Medium   |
+| 6   | Weather bbox endpoint (`/weather/observations?bbox`)      | Medium   |

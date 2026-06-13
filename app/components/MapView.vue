@@ -36,7 +36,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(["vessel-click", "update:zoom", "update:coords"])
+const emit = defineEmits(["vessel-click", "update:zoom", "update:coords", "update:center"])
 
 const mapContainer = ref(null)
 const popupPixel = ref(null)
@@ -121,6 +121,11 @@ onMounted(() => {
 
   mapInstance.getView().on("change:resolution", () => {
     emit("update:zoom", mapInstance.getView().getZoom())
+  })
+
+  mapInstance.getView().on("change:center", () => {
+    const [lon, lat] = toLonLat(mapInstance.getView().getCenter())
+    emit("update:center", { lat, lon })
   })
 })
 </script>

@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      aisBaseUrl: ''  // overridden by NUXT_PUBLIC_AIS_BASE_URL in .env
+      apiBaseUrl: '' // overridden by NUXT_PUBLIC_API_BASE_URL in .env
     }
   },
 
