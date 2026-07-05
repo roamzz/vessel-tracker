@@ -115,7 +115,9 @@ onUnmounted(() => {
           leave-active-class="transition-opacity duration-500"
           leave-to-class="opacity-0"
         >
-          <div v-if="isSyncing" class="absolute top-0 inset-x-0 h-0.5 z-40 overflow-hidden">
+          <!-- Only for the true cold start (no cached/fetched vessels yet) — once
+               there's something on screen, polls and bbox refetches sync silently. -->
+          <div v-if="isSyncing && !vessels.length" class="absolute top-0 inset-x-0 h-0.5 z-40 overflow-hidden">
             <div
               class="h-full w-1/3 bg-primary rounded-full [animation:map-loading_1.4s_ease-in-out_infinite]"
             />

@@ -86,6 +86,15 @@ function emitBBox() {
   emit("update:bbox", { minLat, maxLat, minLon, maxLon })
 }
 
+// "change:center" doesn't fire for the center set in the View constructor,
+// only on later pans — so without this, weather never loads until the user
+// moves the map (see useWeatherStore.fetch, called from update:center).
+function emitCenter() {
+  if (!mapInstance) return
+  const [lon, lat] = toLonLat(mapInstance.getView().getCenter())
+  emit("update:center", { lat, lon })
+}
+
 function fitIfEmpty(vessels) {
   if (!mapInstance || !vessels.length) return
   const viewport = mapInstance.getView().calculateExtent(mapInstance.getSize())
@@ -182,6 +191,7 @@ onMounted(() => {
   // waiting for the user to move it first.
   mapInstance.on("moveend", emitBBox)
   mapInstance.once("rendercomplete", emitBBox)
+  mapInstance.once("rendercomplete", emitCenter)
 })
 </script>
 
