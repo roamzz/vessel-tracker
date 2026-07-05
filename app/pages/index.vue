@@ -1,8 +1,8 @@
 <script setup>
-import { useVesselStore } from '~/stores/vessels'
-import { useWeatherStore } from '~/stores/weather'
-import { useNewsStore } from '~/stores/news'
-import { usePanels } from '~/composables/usePanels'
+import { useVesselStore } from "~/stores/vessels"
+import { useWeatherStore } from "~/stores/weather"
+import { useNewsStore } from "~/stores/news"
+import { usePanels } from "~/composables/usePanels"
 
 const vesselStore = useVesselStore()
 const weatherStore = useWeatherStore()
@@ -13,10 +13,10 @@ const { leftOpen, rightOpen } = usePanels()
 
 const selectedId = ref(null)
 const zoom = ref(7)
-const coords = ref('')
+const coords = ref("")
 const mapRef = ref(null)
 
-const selectedVessel = computed(() => vessels.value.find(v => v.id === selectedId.value) || null)
+const selectedVessel = computed(() => vessels.value.find((v) => v.id === selectedId.value) || null)
 
 // Fit map to vessel bounds on first load, and on subsequent polls if no vessels are visible
 watch(vessels, (list) => {
@@ -31,7 +31,7 @@ function onVesselClick(vessel) {
 function onSidebarSelect(id) {
   selectedId.value = selectedId.value === id ? null : id
   if (selectedId.value) {
-    const vessel = vessels.value.find(v => v.id === selectedId.value)
+    const vessel = vessels.value.find((v) => v.id === selectedId.value)
     if (vessel) mapRef.value?.flyTo(vessel.lon, vessel.lat)
   }
 }
@@ -78,7 +78,12 @@ onUnmounted(() => {
       </div>
 
       <!-- Hanging close tabs — anchored to sidebar edges, float over the map -->
-      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-200"
+        leave-to-class="opacity-0"
+      >
         <button
           v-if="leftOpen"
           class="absolute left-72 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-r-lg border border-l-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer"
@@ -87,7 +92,12 @@ onUnmounted(() => {
           <UIcon name="i-lucide-chevron-left" class="w-3 h-3" />
         </button>
       </Transition>
-      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-200" leave-to-class="opacity-0">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-200"
+        leave-to-class="opacity-0"
+      >
         <button
           v-if="rightOpen"
           class="absolute right-80 top-20 z-30 flex items-center justify-center w-5 h-10 rounded-l-lg border border-r-0 border-default bg-elevated/90 backdrop-blur-sm shadow-md text-muted hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer"
@@ -99,9 +109,16 @@ onUnmounted(() => {
 
       <!-- Center: map + floating reopen buttons -->
       <div class="relative flex-1 min-w-0">
-        <Transition enter-active-class="transition-opacity duration-300" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-500" leave-to-class="opacity-0">
+        <Transition
+          enter-active-class="transition-opacity duration-300"
+          enter-from-class="opacity-0"
+          leave-active-class="transition-opacity duration-500"
+          leave-to-class="opacity-0"
+        >
           <div v-if="isSyncing" class="absolute top-0 inset-x-0 h-0.5 z-40 overflow-hidden">
-            <div class="h-full w-1/3 bg-primary rounded-full [animation:map-loading_1.4s_ease-in-out_infinite]" />
+            <div
+              class="h-full w-1/3 bg-primary rounded-full [animation:map-loading_1.4s_ease-in-out_infinite]"
+            />
           </div>
         </Transition>
 
@@ -166,6 +183,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <AppStatusBar :zoom="zoom" :coords="coords" />
+    <FinancialTicker />
+    <!-- <AppStatusBar :zoom="zoom" :coords="coords" /> -->
   </div>
 </template>
