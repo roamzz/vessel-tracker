@@ -149,9 +149,11 @@ onMounted(() => {
       emit("vessel-click", {
         id: feature.get("id"),
         name: feature.get("name"),
-        speed: feature.get("speed"),
-        heading: Math.round((feature.get("heading") * 180) / Math.PI),
-        type: feature.get("type")
+        // speed/heading/type hidden — the feature no longer carries these
+        // (API doesn't return sog/true_heading/cog/ship_type yet)
+        // speed: feature.get("speed"),
+        // heading: Math.round((feature.get("heading") * 180) / Math.PI),
+        // type: feature.get("type")
       })
     } else {
       emit("vessel-click", null)

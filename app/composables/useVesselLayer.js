@@ -5,13 +5,16 @@ import Point from "ol/geom/Point"
 import Style from "ol/style/Style"
 import Icon from "ol/style/Icon"
 import { fromLonLat } from "ol/proj"
-import { VESSEL_COLORS } from "~/utils/vessel"
+// import { VESSEL_COLORS } from "~/utils/vessel" -- unused while per-type coloring is commented out below
 
-// Canvas cache — 3 types × 2 selection states = 6 variants
+// Canvas cache — one shape per selection state. Per-type variants are commented
+// out below until the API returns ship_type.
 const canvasCache = {}
 
-function drawVessel(type, selected) {
-  const key = `${type}-${selected ? 1 : 0}`
+const VESSEL_COLOR = '#60a5fa' // neutral color — real per-type colors need ship_type from the API
+
+function drawVessel(selected) {
+  const key = selected ? 1 : 0
   if (canvasCache[key]) return canvasCache[key]
 
   const size = selected ? 30 : 20
@@ -37,7 +40,7 @@ function drawVessel(type, selected) {
   ctx.lineTo(-w, -h * 0.05)   // port beam
   ctx.closePath()
 
-  ctx.fillStyle = VESSEL_COLORS[type] || VESSEL_COLORS.cargo
+  ctx.fillStyle = VESSEL_COLOR
   ctx.fill()
 
   if (selected) {
@@ -64,15 +67,13 @@ function scaleFromResolution(resolution) {
 
 function vesselStyle(feature, resolution) {
   const selected = feature.get('selected') === 1
-  const type = feature.get('type') || 'cargo'
-  const heading = feature.get('heading') || 0
-  const canvas = drawVessel(type, selected)
+  const canvas = drawVessel(selected)
 
   return new Style({
     image: new Icon({
       img: canvas,
       imgSize: [canvas.width, canvas.height],
-      rotation: heading,
+      // rotation left at 0 — the API doesn't return true_heading/cog yet
       rotateWithView: false,
       scale: scaleFromResolution(resolution),
     })
@@ -92,7 +93,6 @@ function easeOutCubic(t) {
 export function useVesselLayer() {
   const source = new VectorSource()
   const layer = new VectorLayer({ source, style: vesselStyle })
-  const TYPE_CODE = { cargo: 1, tanker: 2, passenger: 3 }
 
   // id -> { from: [x, y], to: [x, y], start: DOMHighResTimeStamp }
   const glides = new Map()
@@ -140,18 +140,12 @@ export function useVesselLayer() {
       const coord = fromLonLat([v.lon, v.lat])
       if (existingIds.has(v.id)) {
         const f = source.getFeatureById(v.id)
-        f.set('heading', (v.heading * Math.PI) / 180)
-        f.set('speed', v.speed)
         f.set('selected', isSelected)
-        f.set('type', v.type)
         glideTo(v.id, coord) // known vessel, new offset — animate to the updated fix
       } else {
         const f = new Feature({
           geometry: new Point(coord),
-          heading: (v.heading * Math.PI) / 180,
-          speed: v.speed,
           selected: isSelected,
-          type: v.type,
           id: v.id,
           name: v.name,
         })
