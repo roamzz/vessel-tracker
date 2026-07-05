@@ -49,7 +49,13 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(["vessel-click", "update:zoom", "update:coords", "update:center"])
+const emit = defineEmits([
+  "vessel-click",
+  "update:zoom",
+  "update:coords",
+  "update:center",
+  "update:bbox"
+])
 
 const mapContainer = ref(null)
 const popupPixel = ref(null)
@@ -69,6 +75,17 @@ function fitBounds(vessels) {
   mapInstance.getView().fit(extent, { padding: [80, 80, 80, 80], duration: 800, maxZoom: 12 })
 }
 
+// The replay endpoint needs a bbox to know which vessels to track, so the
+// visible viewport itself becomes the query — panning/zooming refetches for
+// the new area (see useVesselStore.setBBox).
+function emitBBox() {
+  if (!mapInstance) return
+  const extent = mapInstance.getView().calculateExtent(mapInstance.getSize())
+  const [minLon, minLat] = toLonLat([extent[0], extent[1]])
+  const [maxLon, maxLat] = toLonLat([extent[2], extent[3]])
+  emit("update:bbox", { minLat, maxLat, minLon, maxLon })
+}
+
 function fitIfEmpty(vessels) {
   if (!mapInstance || !vessels.length) return
   const viewport = mapInstance.getView().calculateExtent(mapInstance.getSize())
@@ -86,9 +103,12 @@ function fitIfEmpty(vessels) {
 
 defineExpose({ flyTo, fitBounds, fitIfEmpty })
 
-watch(() => colorMode.value, (mode) => {
-  tileLayer?.setSource(cartoSource(mode))
-})
+watch(
+  () => colorMode.value,
+  (mode) => {
+    tileLayer?.setSource(cartoSource(mode))
+  }
+)
 
 watchEffect(() => {
   updateVessels(props.vessels, props.selectedId)
@@ -154,6 +174,12 @@ onMounted(() => {
     const [lon, lat] = toLonLat(mapInstance.getView().getCenter())
     emit("update:center", { lat, lon })
   })
+
+  // "moveend" covers pan/zoom after the fact; "rendercomplete" fires once so
+  // we get an initial bbox as soon as the map has a real size, without
+  // waiting for the user to move it first.
+  mapInstance.on("moveend", emitBBox)
+  mapInstance.once("rendercomplete", emitBBox)
 })
 </script>
 

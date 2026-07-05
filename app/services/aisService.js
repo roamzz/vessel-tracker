@@ -1,7 +1,20 @@
 import { inferVesselType } from '~/utils/vessel'
 
-export async function fetchLatestPositions({ limit = 50, offset = 0 } = {}) {
-  return useApi()('/ais/positions/latest', { params: { limit, offset } })
+// Replay endpoint, not the plain "latest positions" one: offset here is minutes
+// since the server-side T0 for this bbox/session, not a page cursor. ships=2000
+// is the API's max — we want every vessel in the bbox, not a limited page of them.
+export async function fetchReplayPositions({ bbox, offset = 0, ships = 2000, sessionId } = {}) {
+  return useApi()('/ais/positions/replay', {
+    params: {
+      min_lat: bbox.minLat,
+      max_lat: bbox.maxLat,
+      min_lon: bbox.minLon,
+      max_lon: bbox.maxLon,
+      offset,
+      ships,
+      session_id: sessionId,
+    }
+  })
 }
 
 export function mapVessel(pos) {

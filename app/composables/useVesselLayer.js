@@ -79,31 +79,75 @@ function vesselStyle(feature, resolution) {
   })
 }
 
+// Each sync replaces a vessel's coordinates outright (it's a new replay
+// offset, not an interpolated track), so without this the marker would just
+// teleport. Gliding between old and new position makes that jump readable
+// as "this vessel moved" rather than a silent snap.
+const GLIDE_DURATION = 1000 // ms — long enough that a per-minute position change reads as movement
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3)
+}
+
 export function useVesselLayer() {
   const source = new VectorSource()
   const layer = new VectorLayer({ source, style: vesselStyle })
   const TYPE_CODE = { cargo: 1, tanker: 2, passenger: 3 }
+
+  // id -> { from: [x, y], to: [x, y], start: DOMHighResTimeStamp }
+  const glides = new Map()
+  let rafId = null
+
+  function stepGlides(now) {
+    let animating = false
+    glides.forEach((glide, id) => {
+      const f = source.getFeatureById(id)
+      if (!f) {
+        glides.delete(id)
+        return
+      }
+      const t = Math.min((now - glide.start) / GLIDE_DURATION, 1)
+      const e = easeOutCubic(t)
+      f.getGeometry().setCoordinates([
+        glide.from[0] + (glide.to[0] - glide.from[0]) * e,
+        glide.from[1] + (glide.to[1] - glide.from[1]) * e,
+      ])
+      if (t < 1) animating = true
+      else glides.delete(id)
+    })
+    rafId = animating ? requestAnimationFrame(stepGlides) : null
+  }
+
+  function glideTo(id, toCoord) {
+    const f = source.getFeatureById(id)
+    glides.set(id, { from: f.getGeometry().getCoordinates(), to: toCoord, start: performance.now() })
+    if (!rafId) rafId = requestAnimationFrame(stepGlides)
+  }
 
   function updateVessels(vessels, selectedId = null) {
     const existingIds = new Set(source.getFeatures().map(f => f.getId()))
     const incomingIds = new Set(vessels.map(v => v.id))
 
     source.getFeatures().forEach(f => {
-      if (!incomingIds.has(f.getId())) source.removeFeature(f)
+      if (!incomingIds.has(f.getId())) {
+        glides.delete(f.getId())
+        source.removeFeature(f)
+      }
     })
 
     vessels.forEach(v => {
       const isSelected = v.id === selectedId ? 1 : 0
+      const coord = fromLonLat([v.lon, v.lat])
       if (existingIds.has(v.id)) {
         const f = source.getFeatureById(v.id)
-        f.getGeometry().setCoordinates(fromLonLat([v.lon, v.lat]))
         f.set('heading', (v.heading * Math.PI) / 180)
         f.set('speed', v.speed)
         f.set('selected', isSelected)
         f.set('type', v.type)
+        glideTo(v.id, coord) // known vessel, new offset — animate to the updated fix
       } else {
         const f = new Feature({
-          geometry: new Point(fromLonLat([v.lon, v.lat])),
+          geometry: new Point(coord),
           heading: (v.heading * Math.PI) / 180,
           speed: v.speed,
           selected: isSelected,

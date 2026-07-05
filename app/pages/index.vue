@@ -42,6 +42,12 @@ function onCenterChange({ lat, lon }) {
   centerDebounce = setTimeout(() => weatherStore.fetch({ lat, lon }), 600)
 }
 
+let bboxDebounce = null
+function onBBoxChange(bbox) {
+  clearTimeout(bboxDebounce)
+  bboxDebounce = setTimeout(() => vesselStore.setBBox(bbox), 600)
+}
+
 onMounted(() => {
   vesselStore.startPolling()
   newsStore.start()
@@ -143,6 +149,7 @@ onUnmounted(() => {
           @update:zoom="(z) => (zoom = z)"
           @update:coords="(c) => (coords = c)"
           @update:center="onCenterChange"
+          @update:bbox="onBBoxChange"
         >
           <template #popup>
             <VesselPopup :vessel="selectedVessel" @close="selectedId = null" />
