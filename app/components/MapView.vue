@@ -10,29 +10,22 @@ import { useVesselLayer } from "~/composables/useVesselLayer"
 
 const colorMode = useColorMode()
 
-const CARTO = {
-  dark: [
-    "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-    "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-    "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-    "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
-  ],
-  light: [
-    "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png",
-    "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png"
-  ]
+// Esri basemaps — keyless. 256px tiles in {z}/{y}/{x} order. Esri has no dark
+// street map, so dark mode falls back to the Dark Gray canvas; the canvas
+// tiles top out around zoom 16, so we cap both for a consistent max zoom.
+const ESRI = {
+  dark: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  light:
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
 }
 
-function cartoSource(mode) {
+function baseSource(mode) {
   return new XYZ({
-    urls: mode === "dark" ? CARTO.dark : CARTO.light,
-    tileSize: 512,
-    maxZoom: 19,
+    url: mode === "dark" ? ESRI.dark : ESRI.light,
+    maxZoom: 16,
     crossOrigin: "anonymous",
     attributions:
-      '© <a href="https://carto.com/" target="_blank">CARTO</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+      'Tiles © <a href="https://www.esri.com/" target="_blank">Esri</a> — Esri, HERE, Garmin, © OpenStreetMap contributors, and the GIS user community'
   })
 }
 
@@ -115,7 +108,7 @@ defineExpose({ flyTo, fitBounds, fitIfEmpty })
 watch(
   () => colorMode.value,
   (mode) => {
-    tileLayer?.setSource(cartoSource(mode))
+    tileLayer?.setSource(baseSource(mode))
   }
 )
 
@@ -132,14 +125,17 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  tileLayer = new TileLayer({ source: cartoSource(colorMode.value) })
+  tileLayer = new TileLayer({ source: baseSource(colorMode.value) })
 
   mapInstance = new Map({
     target: mapContainer.value,
     layers: [tileLayer, vesselLayer],
     view: new View({
       center: fromLonLat([0, 51]),
-      zoom: 5
+      zoom: 5,
+      // Esri's gray canvas tiles stop at z16 — cap the view so we never
+      // pan into blank space past the last available tile level.
+      maxZoom: 16
     })
   })
 
